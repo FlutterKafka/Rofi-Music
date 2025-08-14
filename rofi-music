@@ -42,7 +42,7 @@ main() {
 
   local playlist_count=$(playlists "$music_dir" | wc -l | awk '{print $1 + 1}')
   local playlist=$(playlists "$music_dir" | choose "$color" -w 24 -n "$playlist_count")
-  [ -z "$playlist" ] || [ "$playlist" = "Exit" ]
+  [ -z "$playlist" ] || [ "$playlist" = "Exit" ] && { notification "Exiting"; exit 0; }
 
   local playlist_path="$music_dir/$playlist"
 
@@ -53,6 +53,7 @@ main() {
 
   local song_count=$(songs "$playlist_path" | wc -l | awk '{print $1 + 1}')
   local choice=$(songs "$playlist_path" | choose "$color" -w 36 -n "$song_count")
+  [ -z "$choice" ] && { notification "No song selected"; exit 1; }
 
   if [ "$choice" = "Play All" ]; then
     notification "Playing all songs in $playlist"
