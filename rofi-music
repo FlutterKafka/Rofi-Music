@@ -2,17 +2,18 @@
 export LC_ALL=C
 
 # Check dependencies
-command -v mpv >/dev/null || {
-  echo "mpv required"; >>/tmp/pal.log
-  exit 1;
-}
-command -v choose >/dev/null || {
-  echo "choose required"; >>/tmp/pal.log
-  exit 1;
-}
-command -v terminal-notifier >/dev/null || {
-  echo "terminal-notifier required"; >>/tmp/pal.log
-  exit 1;
+mpv_version=$(mpv --version | head -1 | awk '{print $2}')
+if [[ "$mpv_version" < "0.30" ]]; then
+  error_exit "mpv_version $mpv_version is too old; requires 0.30+"
+fi
+command -v choose >/dev/null || error_exit "choose required"
+command -v terminal-notifier >/dev/null || error_exit "terminal-notifier required"
+
+error_exit() {
+  local message="$1"
+  echo "$message" >>/tmp/rofi-music.log
+  notification "$message"
+  exit 1
 }
 
 notification() {
@@ -23,22 +24,14 @@ notification() {
 
 playlists() {
   local music_dir="$1"
-  [ -d "$music_dir" ] || {
-    echo "Music directory not found"; >>/tmp/pal.log
-    notification "Error: Music directory not found"
-    exit 1;
-  }
+  [ -d "$music_dir" ] || error_exit "Music directory not found"
   find "$music_dir" -mindepth 1 -type d -exec basename {} \; | sort -f
   echo "Exit"
 }
 
 songs() {
   local playlist_dir="$1"
-  [ -d "$playlist_dir" ] || {
-    echo "Playlist not found"; >>/tmp/pal.log
-    notification "Error: Playlist not found"
-    exit 1;
-  }
+  [ -d "$playlist_dir" ] || error_exit "Playlist not found"
   echo "Play All"
   find "$playlist_dir" -maxdepth 1 -type f -iname "*.m4a" -exec basename {} \; | sort -f
 }
@@ -49,20 +42,17 @@ main() {
 
   local playlist_count=$(playlists "$music_dir" | wc -l | awk '{print $1 + 1}')
   local playlist=$(playlists "$music_dir" | choose "$color" -w 24 -n "$playlist_count")
-  [ -z "$playlist" ] || [ "$playlist" = "Exit" ] && { notification "Exiting";
-  exit 0; }
+  [ -z "$playlist" ] || [ "$playlist" = "Exit" ]
 
   local playlist_path="$music_dir/$playlist"
 
   if ! songs "$playlist_path" >/dev/null 2>&1; then
-    notification "No songs in $playlist"
+    error_exit "No songs in $playlist"
     exit 1
   fi
 
   local song_count=$(songs "$playlist_path" | wc -l | awk '{print $1 + 1}')
   local choice=$(songs "$playlist_path" | choose "$color" -w 36 -n "$song_count")
-  [ -z "$choice" ] && { notification "No song selected";
-  exit 1; }
 
   if [ "$choice" = "Play All" ]; then
     notification "Playing all songs in $playlist"
