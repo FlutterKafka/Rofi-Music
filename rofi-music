@@ -1,8 +1,7 @@
 #!/bin/bash
 export LC_ALL=C
 
-# Check dependencies
-mpv_version=$(mpv --version | head -1 | awk '{print $2}')
+mpv_version=$(mpv --version | head -1 | cut -d' ' -f2)
 if [[ "$mpv_version" < "0.30" ]]; then
   error_exit "mpv_version $mpv_version is too old; requires 0.30+"
 fi
@@ -23,46 +22,56 @@ notification() {
 }
 
 playlists() {
-  local music_dir="$1"
-  [ -d "$music_dir" ] || error_exit "Music directory not found"
-  find "$music_dir" -mindepth 1 -type d -exec basename {} \; | sort -f
+  local playlists="$1"
+  [ -d "$playlists" ] || error_exit "Playlists not found"
+
+  ls -1 "$playlists" | sort -f
   echo "Exit"
 }
 
 songs() {
-  local playlist_dir="$1"
-  [ -d "$playlist_dir" ] || error_exit "Playlist not found"
+  local songs="$1"
+  local extensions="\( -iname "*.m4a" -o -iname "*.mp3" -o -iname "*.flac" \)"
+  [ -d "$songs" ] || error_exit "Songs not found"
+
   echo "Play All"
-  find "$playlist_dir" -maxdepth 1 -type f -iname "*.m4a" -exec basename {} \; | sort -f
+  find "$songs" -maxdepth 1 -type f $extentions -exec basename {} \; | sort -f
 }
 
 main() {
-  local music_dir="${1:-$HOME/Music}"
-  local color="-b f6b8d0"
+  local playlists="${1:-$HOME/Music}"
 
-  local playlist_count=$(playlists "$music_dir" | wc -l | awk '{print $1 + 1}')
-  local playlist=$(playlists "$music_dir" | choose "$color" -w 24 -n "$playlist_count")
-  [ -z "$playlist" ] || [ "$playlist" = "Exit" ] && { notification "Exiting"; exit 0; }
+  # Get number of playlists for dynamic rows
+  local playlists_count=$(playlists "$playlists" | wc -l | awk '{print $1 + 1}')
 
-  local playlist_path="$music_dir/$playlist"
+  # Spawn initial menu with all detected playlists
+  local menu=$(playlists "$playlists" | choose -w 24 -n "$playlists_count")
+  [ -z "$menu" ] || [ "$menu" = "Exit" ] && { notification "Exiting"; exit 0; }
 
-  if ! songs "$playlist_path" >/dev/null 2>&1; then
-    error_exit "No songs in $playlist"
-    exit 1
-  fi
+  local selected_playlist="$playlists/$menu"
 
-  local song_count=$(songs "$playlist_path" | wc -l | awk '{print $1 + 1}')
-  local choice=$(songs "$playlist_path" | choose "$color" -w 36 -n "$song_count")
+  # Get number of songs in playlist for dynamic rows
+  local songs_count=$(songs "$selected_playlist" | wc -l | awk '{print $1 + 1}')
+
+  # Spawn menu with all songs in selected playlist
+  local choice=$(songs "$selected_playlist" | choose -w 36 -n "$songs_count")
   [ -z "$choice" ] && { notification "No song selected"; exit 1; }
 
   if [ "$choice" = "Play All" ]; then
-    notification "Playing all songs in $playlist"
-    mpv --no-video --shuffle "$playlist_path"/*.m4a --loop-playlist >/dev/null 2>&1
+    notification "Playing all songs in $menu"
+    mpv --no-video --shuffle "$selected_playlist"/*.m4a --loop-playlist >/dev/null 2>&1 &
+
   else
-    local song_path="$playlist_path/$choice"
+    local selected_song="$selected_playlist/$choice"
+
     notification "Playing $choice"
-    mpv --no-video "$song_path" --loop >/dev/null 2>&1
+    mpv --no-video "$selected_song" --loop >/dev/null 2>&1 &
+
   fi
 }
 
-pkill -f mpv || main "$@"
+if pkill -f mpv; then
+  notification "Stopping playback"
+else
+  main "$@"
+fi
