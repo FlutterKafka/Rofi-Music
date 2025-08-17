@@ -1,6 +1,7 @@
 #!/bin/bash
 export LC_ALL=C
 
+# Version and dependency check
 mpv_version=$(mpv --version | head -1 | cut -d' ' -f2)
 if [[ "$mpv_version" < "0.30" ]]; then
   error_exit "mpv_version $mpv_version is too old; requires 0.30+"
@@ -24,18 +25,16 @@ notification() {
 playlists() {
   local playlists="$1"
   [ -d "$playlists" ] || error_exit "Playlists not found"
-
-  ls -1 "$playlists" | sort -f
-  echo "Exit"
+  (ls -1 "$playlists" | sort -f; echo "Exit")
 }
 
 songs() {
   local songs="$1"
-  local extensions="\( -iname "*.m4a" -o -iname "*.mp3" -o -iname "*.flac" \)"
   [ -d "$songs" ] || error_exit "Songs not found"
-
   echo "Play All"
-  find "$songs" -maxdepth 1 -type f $extentions -exec basename {} \; | sort -f
+  for file in "$songs"/*.{m4a,mp3,flac}; do
+    [ -f "$file" ] && printf '%s\n' "${file##*/}";
+  done | sort -f
 }
 
 main() {
@@ -48,6 +47,7 @@ main() {
   local menu=$(playlists "$playlists" | choose -w 24 -n "$playlists_count")
   [ -z "$menu" ] || [ "$menu" = "Exit" ] && { notification "Exiting"; exit 0; }
 
+  # Saves selected playlist in buffer
   local selected_playlist="$playlists/$menu"
 
   # Get number of songs in playlist for dynamic rows
@@ -57,16 +57,14 @@ main() {
   local choice=$(songs "$selected_playlist" | choose -w 36 -n "$songs_count")
   [ -z "$choice" ] && { notification "No song selected"; exit 1; }
 
+  # Logic for playing all or song selection
   if [ "$choice" = "Play All" ]; then
     notification "Playing all songs in $menu"
-    mpv --no-video --shuffle "$selected_playlist"/*.m4a --loop-playlist >/dev/null 2>&1 &
-
+    mpv --no-video --shuffle "$selected_playlist"/*.{m4a,mp3,flac} --loop-playlist >/dev/null 2>&1 &
   else
     local selected_song="$selected_playlist/$choice"
-
     notification "Playing $choice"
     mpv --no-video "$selected_song" --loop >/dev/null 2>&1 &
-
   fi
 }
 
