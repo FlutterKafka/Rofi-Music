@@ -6,7 +6,7 @@ Bash script using rofi (choose-gui) menu to play music libraries on macOS.
 - [x] Add mpv version check
 - [x] Optimize performance
 - [x] Support more file types
-- [ ] Add documentation with --help
+- [x] Add documentation with --help
 - [ ] Make cross-platform (notify-send for linux)
 
 # Credits
