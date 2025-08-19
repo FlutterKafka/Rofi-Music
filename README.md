@@ -1,5 +1,5 @@
 # Rofi-Music
-Bash script using rofi (choose-gui) menu to play music libraries on macOS.
+Bash script using rofi (choose-gui) menu to play local music on macOS.
 
 # Preview
 <img alt="image" src="https://github.com/FlutterKafka/Rofi-Music/blob/main/assets/rofi-music.png" />
