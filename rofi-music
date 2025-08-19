@@ -9,6 +9,7 @@ fi
 command -v choose >/dev/null || error_exit "choose required"
 command -v terminal-notifier >/dev/null || error_exit "terminal-notifier required"
 
+# Unified error function
 error_exit() {
   local message="$1"
   echo "$message" >>/tmp/rofi-music.log
@@ -16,6 +17,7 @@ error_exit() {
   exit 1
 }
 
+# Notification messages truncated to 50 characters
 notification() {
   local message="$1"
   message="${message:0:50}"
@@ -40,20 +42,26 @@ songs() {
 main() {
   local playlists="${1:-$HOME/Music}"
 
-  # Get number of playlists for dynamic rows
+  # Dynamic row calculation for playlists
   local playlists_count=$(playlists "$playlists" | wc -l | awk '{print $1 + 1}')
+  if [ "$playlists_count" -gt 20 ]; then
+    playlists_count=20
+  fi
 
-  # Spawn initial menu with all detected playlists
+  # Spawn initial menu with all detected playlists in specified directory
   local menu=$(playlists "$playlists" | choose -w 24 -n "$playlists_count")
   [ -z "$menu" ] || [ "$menu" = "Exit" ] && { notification "Exiting"; exit 0; }
 
-  # Saves selected playlist in buffer
+  # User selected playlist
   local selected_playlist="$playlists/$menu"
 
-  # Get number of songs in playlist for dynamic rows
+  # Dynamic row calculation for songs
   local songs_count=$(songs "$selected_playlist" | wc -l | awk '{print $1 + 1}')
+  if [ "$songs_count" -gt 20 ]; then
+    songs_count=20
+  fi
 
-  # Spawn menu with all songs in selected playlist
+  # Spawn menu with all songs in user selected playlist
   local choice=$(songs "$selected_playlist" | choose -w 36 -n "$songs_count")
   [ -z "$choice" ] && { notification "No song selected"; exit 1; }
 
@@ -68,6 +76,36 @@ main() {
   fi
 }
 
+# Handles --help documentation arguments
+help() {
+cat << EOF
+Usage: rofi-music [OPTION] [MUSIC_DIRECTORY]
+A script to select and play music playlists or songs using mpv.
+
+Options:
+  -h, --help        Display this help message and exit
+
+Arguments:
+  MUSIC_DIRECTORY   Directory containing music playlists (default: ~/Music)
+
+Examples:
+  rofi-music ~/Music/Playlists  # Uses specified directory
+
+Dependencies:
+  - mpv (version 0.30 or higher)
+  - choose
+  - terminal-notifier
+EOF
+}
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  help
+  exit 0
+elif [ -n "$1" ] && [ "${1#-}" != "$1" ]; then
+  help
+  exit 1
+fi
+
+# Logic for stopping playback or starting the script
 if pkill -f mpv; then
   notification "Stopping playback"
 else
