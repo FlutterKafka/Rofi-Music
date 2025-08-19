@@ -1,13 +1,26 @@
 # Rofi-Music
 Bash script using rofi (choose-gui) menu to play music libraries on macOS.
 
+# Preview
+<img alt="image" src="https://github.com/FlutterKafka/Rofi-Music/blob/main/assets/rofi-music.png" />
+
 # Planned Improvements
-- [x] Improve error handling
-- [x] Add mpv version check
-- [x] Optimize performance
-- [x] Support more file types
-- [x] Add documentation with --help
 - [ ] Make cross-platform (notify-send for linux)
+
+# Installation
+Install [Homebrew](https://brew.sh/)
+```
+brew install choose-gui terminal-notifier mpv
+```
+Once the dependencies are installed, then clone the repo and give the script execute permissions.
+```
+git clone https://github.com/FlutterKafka/Rofi-Music.git && cd Rofi-Music
+chmod +x rofi-music
+```
+Now you should be able to run the script.
+```
+./rofi-music
+```
 
 # Credits
 The idea and framework for this script came from:
