@@ -49,7 +49,7 @@ main() {
   fi
 
   # Spawn initial menu with all detected playlists in specified directory
-  local menu=$(playlists "$playlists" | choose -w 24 -n "$playlists_count")
+  local menu=$(playlists "$playlists" | choose -b f6b8d0 -w 24 -n "$playlists_count")
   [ -z "$menu" ] || [ "$menu" = "Exit" ] && { notification "Exiting"; exit 0; }
 
   # User selected playlist
@@ -62,7 +62,7 @@ main() {
   fi
 
   # Spawn menu with all songs in user selected playlist
-  local choice=$(songs "$selected_playlist" | choose -w 36 -n "$songs_count")
+  local choice=$(songs "$selected_playlist" | choose -b f6b8d0 -w 36 -n "$songs_count")
   [ -z "$choice" ] && { notification "No song selected"; exit 1; }
 
   # Logic for playing all or song selection
