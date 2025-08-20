@@ -13,7 +13,7 @@
     {
       packages.${system}.default = pkgs.stdenv.mkDerivation {
         name = "rofi-music";
-        src = ./.;
+        src = self;
 
         buildInputs = with pkgs; [
           mpv
