@@ -4,13 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    rofi-music-src = {
-      url = "github:FlutterKafka/Rofi-Music";
-      flake = false;
-    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, rofi-music-src }:
+  outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -18,7 +14,7 @@
       {
         packages.default = pkgs.stdenv.mkDerivation {
           name = "rofi-music";
-          src = rofi-music-src;
+          src = self;
 
           buildInputs = with pkgs; [
             mpv
