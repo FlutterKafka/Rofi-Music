@@ -34,27 +34,10 @@
         "type": "github"
       }
     },
-    "rofi-music-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1755713039,
-        "narHash": "sha256-C+4spjxGFLeD7k61MNpobPghtH7EvBZWfW2AcCC9g5s=",
-        "owner": "FlutterKafka",
-        "repo": "Rofi-Music",
-        "rev": "e24d61f72e4d0a709c3c659c17e54713d80d83d6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "FlutterKafka",
-        "repo": "Rofi-Music",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
-        "rofi-music-src": "rofi-music-src"
+        "nixpkgs": "nixpkgs"
       }
     },
     "systems": {
